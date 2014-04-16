@@ -4,7 +4,7 @@ Tags:  content types, custom fields, custom post types, custom taxonomies, pods,
 Donate link: http://podsfoundation.org/donate/
 Requires at least: 3.8
 Tested up to: 3.9
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPL v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,7 +15,7 @@ Pods Frontier Auto Display is a plugin that allows you to easily output Pods Tem
 
 Once it this plugin is activated, you will see a new tab "Pods Frontier Auto Templates" in the Pods editor for compatible post types. Simply set the name of the Pods Templates you'd like to use for single and archive view in that tab.
 
-Requires [Pods 2.3.18](http://wordpress.org/plugins/pods/] or later.
+Requires [Pods 2.3.18](http://wordpress.org/plugins/pods/) or later.
 
 == Installation ==
 1. Unpack the entire contents of this plugin zip file into your `wp-content/plugins/` folder locally

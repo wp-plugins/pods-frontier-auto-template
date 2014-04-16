@@ -3,7 +3,7 @@
 Plugin Name: Pods Frontier Auto Template
 Plugin URI: http://pods.io/?p=182830
 Description: Automatic front-end output of Pods Templates.
-Version: 0.1.0
+Version: 0.1.1
 Author: Pods Framework Team
 Author URI: http://pods.io/
 Text Domain: pods-pfat
