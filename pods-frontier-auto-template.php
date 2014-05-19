@@ -3,7 +3,7 @@
 Plugin Name: Pods Frontier Auto Template
 Plugin URI: http://pods.io/?p=182830
 Description: Automatic front-end output of Pods Templates.
-Version: 0.1.1
+Version: 1.0.0
 Author: Pods Framework Team
 Author URI: http://pods.io/
 Text Domain: pods-pfat
@@ -122,20 +122,23 @@ class Pods_PFAT {
 	}
 
 	/**
-	 * Placeholder for activation function
+	 * Activation function
 	 *
-	 * @since 0.0.1
+	 * @since 1.0.0
 	 */
 	public function activate() {
+
 
 	}
 
 	/**
-	 * Placeholder for deactivation function
+	 * Deactivation function
 	 *
-	 * @since 0.0.1
+	 * @since 1.0.0
 	 */
 	public function deactivate() {
+
+		$this->reseter();
 
 	}
 
@@ -187,23 +190,39 @@ class Pods_PFAT {
 					'label'             => __( 'Enable Automatic Pods Templates for this Pod?', 'pods-pfat' ),
 					'help'              => __( 'When enabled you can specify the names of Pods Templates to be used to display items in this Pod in the front-end.', 'pods-pfat' ),
 					'type'              => 'boolean',
-					'default'           => FALSE,
-					'dependency'        => TRUE,
+					'default'           => false,
+					'dependency'        => true,
 					'boolean_yes_label' => ''
 				),
 				'pfat_single'  => array (
 					'label'      => __( 'Single item view template', 'pods-pfat' ),
 					'help'       => __( 'Name of Pods template to use for single item view.', 'pods-pfat' ),
 					'type'       => 'text',
-					'default'    => FALSE,
-					'depends-on' => array ( 'pfat_enable' => TRUE )
+					'default'    => false,
+					'depends-on' => array ( 'pfat_enable' => true )
+				),
+				'pfat_append_single'  => array (
+					'label'      => __( 'Append template to content or replace content?', 'pods-pfat' ),
+					'help'       => __( 'Whether to append template to content or replace content with template for single item view.', 'pods-pfat' ),
+					'type'       => 'boolean',
+					'default'    => true,
+					'depends-on' => array ( 'pfat_enable' => true ),
+					'boolean_yes_label' => 'Append Template For Single Items?',
 				),
 				'pfat_archive' => array (
 					'label'      => __( 'Archive view template', 'pods-pfat' ),
 					'help'       => __( 'Name of Pods template to use for use in this Pods archive pages.', 'pods-pfat' ),
 					'type'       => 'text',
-					'default'    => FALSE,
-					'depends-on' => array ( 'pfat_enable' => TRUE )
+					'default'    => false,
+					'depends-on' => array ( 'pfat_enable' => true )
+				),
+				'pfat_append_archive'  => array (
+					'label'      => __( 'Append template to content or replace content?', 'pods-pfat' ),
+					'help'       => __( 'Whether to append template to content or replace content with template for archive view.', 'pods-pfat' ),
+					'type'       => 'boolean',
+					'default'    => true,
+					'depends-on' => array ( 'pfat_enable' => true ),
+					'boolean_yes_label' => 'Append Template For Archive View?',
 				),
 			);
 		}
@@ -215,16 +234,24 @@ class Pods_PFAT {
 					'label'             => __( 'Enable Automatic Pods Templates for this Pod?', 'pods-pfat' ),
 					'help'              => __( 'When enabled you can specify the names of a Pods Template to be used to display items in this Pod in the front-end.', 'pods-pfat' ),
 					'type'              => 'boolean',
-					'default'           => FALSE,
-					'dependency'        => TRUE,
+					'default'           => false,
+					'dependency'        => true,
 					'boolean_yes_label' => ''
 				),
 				'pfat_archive'  => array (
 					'label'      => __( 'Taxonomy Template', 'pods-pfat' ),
 					'help'       => __( 'Name of Pods template to use for this taxonomy.', 'pods-pfat' ),
 					'type'       => 'text',
-					'default'    => FALSE,
-					'depends-on' => array ( 'pfat_enable' => TRUE )
+					'default'    => false,
+					'depends-on' => array ( 'pfat_enable' => true )
+				),
+				'pfat_append_archive'  => array (
+					'label'      => __( 'Append template to content or replace content?', 'pods-pfat' ),
+					'help'       => __( 'Whether to append template to content or replace content with template.', 'pods-pfat' ),
+					'type'       => 'boolean',
+					'default'    => true,
+					'depends-on' => array ( 'pfat_enable' => true ),
+					'boolean_yes_label' => 'Append Template?',
 				),
 			);
 		}
@@ -245,7 +272,7 @@ class Pods_PFAT {
 	function front_end() {
 
 		if ( PODS_PFAT_DEV_MODE ) {
-			$this->delete_transients();
+			$this->reseter();
 		}
 
 		if ( !is_admin() ) {
@@ -270,20 +297,22 @@ class Pods_PFAT {
 	function reset( $option, $old_value, $value ) {
 
 		if ( $option === '_transient_pods_flush_rewrites' ) {
-			$this->delete_transients();
+			$this->reseter();
 		}
 
 	}
 
-	/**
-	 * Delete the transients set by this plugin
-	 *
-	 * @since 0.0.1
-	 */
-	function delete_transients() {
 
-		delete_transient( 'pods_pfat_the_pods' );
-		delete_transient( 'pods_pfat_auto_pods' );
+	/**
+	 * Delete transients that stores the settings.
+	 *
+	 * @since 1.0.0
+	 */
+	function reseter() {
+		$keys = array( 'pods_pfat_the_pods', 'pods_pfat_auto_pods' );
+		foreach( $keys as $key ) {
+			pods_transient_clear( $key );
+		}
 
 	}
 

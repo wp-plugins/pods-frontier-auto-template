@@ -33,7 +33,8 @@ class Pods_PFAT_Frontend {
 	function the_pods() {
 
 		//use the cached results
-		$the_pods = get_transient( 'pods_pfat_the_pods' );
+		$key = 'pods_pfat_the_pods';
+		$the_pods = pods_transient_get( $key  );
 
 		//check if we already have the results cached & use it if we can.
 		if ( false === $the_pods || PODS_PFAT_DEV_MODE ) {
@@ -47,7 +48,8 @@ class Pods_PFAT_Frontend {
 			);
 
 			//cache the results
-			set_transient( 'pods_pfat_the_pods', $the_pods, PODS_PFAT_TRANSIENT_EXPIRE );
+			pods_transient_set( $key, $the_pods );
+
 		}
 
 		return $the_pods;
@@ -62,8 +64,10 @@ class Pods_PFAT_Frontend {
 	 * @since 0.0.1
 	 */
 	function auto_pods() {
+
 		//try to get cached results of this method
-		$auto_pods = get_transient( 'pods_pfat_auto_pods' );
+		$key = 'pods_pfat_auto_pods';
+		$auto_pods = pods_transient_get( $key );
 
 		//check if we already have the results cached & use it if we can.
 		if ( $auto_pods === false || PODS_PFAT_DEV_MODE ) {
@@ -82,18 +86,22 @@ class Pods_PFAT_Frontend {
 					//check if pfat_single and pfat_archive are set
 					$single = pods_v( 'pfat_single', $pods->pod_data[ 'options' ], false, true );
 					$archive = pods_v( 'pfat_archive', $pods->pod_data[ 'options' ], false, true );
+					$single_append = pods_v( 'pfat_append_single', $pods->pod_data[ 'options' ], true, true );
+					$archive_append = pods_v( 'pfat_append_archive', $pods->pod_data[ 'options' ], true, true );
 
 					//build output array
 					$auto_pods[ $the_pod ] = array(
 						'name' => $the_pod,
 						'single' => $single,
-						'archive' => $archive
+						'archive' => $archive,
+						'single_append' => $single_append,
+						'archive_append' => $archive_append,
 					);
 				}
 			} //endforeach
 
 			//cache the results
-			set_transient( 'pods_pfat_auto_pods', $auto_pods, PODS_PFAT_TRANSIENT_EXPIRE );
+			pods_transient_set( $key, $auto_pods );
 		}
 
 		return $auto_pods;
@@ -113,37 +121,40 @@ class Pods_PFAT_Frontend {
 	 */
 	function front( $content ) {
 
-		//get global post object
-		global $post;
-
-		//first use other methods in class to build array to search in/ use
-		$possible_pods = $this->auto_pods();
-
-		//check if on a taxonomy
+		//start by getting current post or stdClass object
 		global $wp_query;
-		if ( isset( $wp_query->query_vars[ 'taxonomy'] ) ) {
-			//if so, but current taxonomy name in a variable
-			$taxonomy = $wp_query->query_vars[ 'taxonomy'];
+		$obj = $wp_query->get_queried_object();
 
-			//and set $current_post_type to the name of the current taxonomy
-			$current_post_type = $taxonomy;
-		}
-		else {
-			//get set to current post's post type
-			$current_post_type = get_post_type( $post->ID );
-
-			//if $current_post_type is false then set it to post
-			if ( $current_post_type === false ) {
-				$current_post_type = 'post';
-			}
+		//see if we are on a post type and if so, set $current_post_type to post type
+		if ( isset( $obj->post_type ) ) {
+			$current_post_type = $obj->post_type;
 
 			//also set $taxonomy false
 			$taxonomy = false;
 		}
+		elseif ( isset( $obj->taxonomy ) ) {
+			$taxonomy = $obj->taxonomy;
+
+			$current_post_type = $taxonomy;
+		}
+		elseif ( isset ( $obj->name ) ) {
+			$current_post_type = $obj->name;
+		}
+		elseif ( is_home() ) {
+			$current_post_type = 'post';
+		}
+		else {
+			$current_post_type = false;
+		}
+
+		//now use other methods in class to build array to search in/ use
+		$possible_pods = $this->auto_pods();
 
 		//check if $current_post_type is the key of the array of possible pods
 		if ( isset( $possible_pods[ $current_post_type ] ) ) {
+
 			//build Pods object for current item
+			global $post;
 			$pods = pods( $current_post_type, $post->ID );
 
 			//get array for the current post type
@@ -151,21 +162,21 @@ class Pods_PFAT_Frontend {
 
 
 			if ( $this_pod[ 'single' ] && is_singular( $current_post_type ) ) {
-					//append the template
-					$content = $this->load_template( $this_pod[ 'single' ], $content , $pods );
+				//load the template
+				$content = $this->load_template( $this_pod[ 'single' ], $content , $pods, $this_pod[ 'single_append' ] );
 
 			}
 			//if pfat_archive was set try to use that template
 			//check if we are on an archive of the post type
 			elseif ( $this_pod[ 'archive' ] && is_post_type_archive( $current_post_type ) ) {
-					//append the template
-					$content = $this->load_template( $this_pod[ 'archive' ], $content , $pods );
+				//load the template
+				$content = $this->load_template( $this_pod[ 'archive' ], $content , $pods, $this_pod[ 'archive_append' ] );
 
 			}
 			//if pfat_archive was set and we're in the blog index, try to append template
 			elseif ( is_home() && $this_pod[ 'archive' ] && $current_post_type === 'post'  ) {
 				//append the template
-				$content = $this->load_template( $this_pod[ 'archive' ], $content , $pods );
+				$content = $this->load_template( $this_pod[ 'archive' ], $content , $pods, $this_pod[ 'archive_append' ] );
 
 			}
 			//if is taxonomy archive of the selected taxonomy
@@ -173,7 +184,7 @@ class Pods_PFAT_Frontend {
 				//if pfat_single was set try to use that template
 				if ( $this_pod[ 'archive' ] ) {
 					//append the template
-					$content = $this->load_template( $this_pod[ 'archive' ], $content , $pods );
+					$content = $this->load_template( $this_pod[ 'archive' ], $content , $pods, $this_pod[ 'archive_append' ] );
 				}
 
 			}
@@ -190,18 +201,25 @@ class Pods_PFAT_Frontend {
 	 * @param string 	$template_name 	The name of a Pods Template to load.
 	 * @param string	$content		Post content
 	 * @param object	$pods			Current Pods object.
+	 * @param bool		$append			Optional. Whether to append content or replace. Default to true.
 	 *
 	 * @return string $content with Pods Template appended if template exists
 	 *
 	 * @since 0.0.1
 	 */
-	function load_template( $template_name, $content, $pods  ) {
+	function load_template( $template_name, $content, $pods, $append = true  ) {
 		//get the template
 		$template = $pods->template( $template_name );
 
-		//check if we got a valid template
+		//check if we have a valid template
 		if ( !is_null( $template ) ) {
-			$content = $content . $template;
+			//if so append it to content or replace content.
+			if ( $append ) {
+				$content = $content . $template;
+			}
+			else {
+				$content = $template;
+			}
 		}
 
 		return $content;
