@@ -1,10 +1,10 @@
 === Pods Frontier Auto Template ===
-Contributors: shelob9, sc0ttkclark, pglewis
+Contributors: shelob9, sc0ttkclark, pglewis, Desertsnowman
 Tags:  content types, custom fields, custom post types, custom taxonomies, pods, post types
 Donate link: http://podsfoundation.org/donate/
 Requires at least: 3.8
-Tested up to: 3.9
-Stable tag: 1.1.0
+Tested up to: 3.9.1
+Stable tag: 1.0.0
 License: GPL v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -64,9 +64,22 @@ First WPORG release.
 * Add option to replace post content with template instead of appending it.
 * Improved context detection in Pods_PFAT_Frontend::front()
 * Using pods_transient_set()/ pods_transient_get() for transient caching.
+= 1.1.0 =
+* Fix issue that caused error when @post_content was used in template.
+* More options for template location and the ability to set template location with a drop-down.
+* Optional template selection from drop-down menu. (Requires PFAT_TEMPLATE_SELECT_DROPDOWN constant to be defined as true ).
+* Optionally act on the_excerpt as well as the_content.
+* Added an admin nag if a archive template is set for a post type without archives.
+* New filter: 'pods_pfat_auto_pods_override' to override settings and prevent API calls.
+* New filter: 'pods_pfat_auto_pods' to change or edit settings after they are retrieved via the API.
+* Output Pods Frontier script and style fields.
 
 == Upgrade Notice ==
 = 0.2.0 =
 Now includes an option to replace post content with the template instead of appending it and more efficient code.
 = 1.0.0 =
 First WPORG release.
+= 1.1.0 =
+New options for where to place the template, as well as bug fixes and settings UI improvements.
+= 1.1.1 =
+Fixes for several issues and improves settings UI. For more information see: http://pods.io/?p=185097

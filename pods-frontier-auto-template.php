@@ -3,7 +3,7 @@
 Plugin Name: Pods Frontier Auto Template
 Plugin URI: http://pods.io/?p=182830
 Description: Automatic front-end output of Pods Templates.
-Version: 1.0.0
+Version: 1.1.0
 Author: Pods Framework Team
 Author URI: http://pods.io/
 Text Domain: pods-pfat
@@ -99,6 +99,8 @@ class Pods_PFAT {
 		//Delete transients when Pods settings are updated.
 		add_action( 'update_option', array( $this, 'reset' ), 21, 3 );
 
+
+		add_action( 'admin_notices', array( $this, 'archive_warning' ) );
 	}
 
 	/**
@@ -202,12 +204,9 @@ class Pods_PFAT {
 					'depends-on' => array ( 'pfat_enable' => true )
 				),
 				'pfat_append_single'  => array (
-					'label'      => __( 'Append template to content or replace content?', 'pods-pfat' ),
-					'help'       => __( 'Whether to append template to content or replace content with template for single item view.', 'pods-pfat' ),
-					'type'       => 'boolean',
-					'default'    => true,
+					'label'      => __( 'Single Template Location', 'pods-pfat' ),
+					'help'       => __( 'Whether the template will go before, after or in place of the post content.', 'pods-pfat' ),
 					'depends-on' => array ( 'pfat_enable' => true ),
-					'boolean_yes_label' => 'Append Template For Single Items?',
 				),
 				'pfat_archive' => array (
 					'label'      => __( 'Archive view template', 'pods-pfat' ),
@@ -217,12 +216,9 @@ class Pods_PFAT {
 					'depends-on' => array ( 'pfat_enable' => true )
 				),
 				'pfat_append_archive'  => array (
-					'label'      => __( 'Append template to content or replace content?', 'pods-pfat' ),
-					'help'       => __( 'Whether to append template to content or replace content with template for archive view.', 'pods-pfat' ),
-					'type'       => 'boolean',
-					'default'    => true,
+					'label'      => __( 'Archive Template Location', 'pods-pfat' ),
+					'help'       => __( 'Whether the template will go before, after or in place of the post content.', 'pods-pfat' ),
 					'depends-on' => array ( 'pfat_enable' => true ),
-					'boolean_yes_label' => 'Append Template For Archive View?',
 				),
 			);
 		}
@@ -246,17 +242,56 @@ class Pods_PFAT {
 					'depends-on' => array ( 'pfat_enable' => true )
 				),
 				'pfat_append_archive'  => array (
-					'label'      => __( 'Append template to content or replace content?', 'pods-pfat' ),
-					'help'       => __( 'Whether to append template to content or replace content with template.', 'pods-pfat' ),
-					'type'       => 'boolean',
-					'default'    => true,
+					'label'      => __( 'Template Location', 'pods-pfat' ),
+					'help'       => __( 'Whether the template will go before, after or in place of the post content.', 'pods-pfat' ),
 					'depends-on' => array ( 'pfat_enable' => true ),
-					'boolean_yes_label' => 'Append Template?',
 				),
 			);
 		}
 
-		//BTW if it's neither, no options added, Tab wouldn't be there anyway.
+		if ( isset( $options[ 'pods-pfat' ] ) ) {
+
+			//field options pick values
+			$pick = array (
+				'type'               => 'pick',
+				'pick_format_type'   => 'single',
+				'pick_format_single' => 'dropdown',
+				'default'            => 'true',
+			);
+
+			//get template titles
+			$titles = $this->get_template_titles();
+			//If the constant PFAT_TEMPLATE_SELECT_DROPDOWN is true, and there are templates, make the template select option a drop-down.
+			if ( !empty( $titles )  && defined( 'PFAT_TEMPLATE_SELECT_DROPDOWN' ) && PFAT_TEMPLATE_SELECT_DROPDOWN ) {
+				foreach ( $pick as $k => $v ) {
+					$options[ 'pods-pfat' ][ 'pfat_single' ][ $k ] = $v;
+
+					$options[ 'pods-pfat' ][ 'pfat_archive' ][ $k ] = $v;
+
+				}
+
+				$options[ 'pods-pfat' ][ 'pfat_archive' ][ 'data' ] = $this->get_template_titles();
+				$options[ 'pods-pfat' ][ 'pfat_single' ][ 'data' ] = $this->get_template_titles();
+			}
+
+			//Add data to $pick for template location
+			unset( $pick['data']);
+			$location_data =  array (
+				'append'  => __( 'After', 'pods-pfat' ),
+				'prepend' => __( 'Before', 'pods-pfat' ),
+				'replace' => __( 'Replace', 'pods-pfat' ),
+			);
+			$pick['data'] = $location_data;
+
+			//add location options to fields without type set.
+			foreach ( $options[ 'pods-pfat' ] as $k => $option ) {
+				if ( !isset( $option[ 'type' ] ) ) {
+					$options[ 'pods-pfat' ][ $k ] = array_merge( $option, $pick );
+				}
+
+			}
+
+		}
 
 		return $options;
 
@@ -265,20 +300,27 @@ class Pods_PFAT {
 	/**
 	 * Include/ init the front end class on the front end only
 	 *
+	 * @param bool	$load_in_admin Optional. Whether to load in admin. Default is false.
+	 *
 	 * @return Pods_PFAT_Frontend
 	 *
 	 * @since 0.0.1
 	 */
-	function front_end() {
+	function front_end( $load_in_admin = false ) {
 
 		if ( PODS_PFAT_DEV_MODE ) {
 			$this->reseter();
 		}
 
-		if ( !is_admin() ) {
+		if ( !is_admin() || $load_in_admin ) {
 			include_once( 'classes/front-end.php' );
 
-			$GLOBALS[ 'Pods_PFAT_Frontend' ] = new Pods_PFAT_Frontend();
+			// Only instantiate if we haven't already
+			if ( !isset( $GLOBALS[ 'Pods_PFAT_Frontend' ] ) ) {
+				$GLOBALS[ 'Pods_PFAT_Frontend' ] = new Pods_PFAT_Frontend();
+			}
+
+			return $GLOBALS[ 'Pods_PFAT_Frontend' ];
 		}
 
 	}
@@ -309,11 +351,93 @@ class Pods_PFAT {
 	 * @since 1.0.0
 	 */
 	function reseter() {
-		$keys = array( 'pods_pfat_the_pods', 'pods_pfat_auto_pods' );
+
+		$keys = array( 'pods_pfat_the_pods', 'pods_pfat_auto_pods', 'pods_pfat_archive_test' );
 		foreach( $keys as $key ) {
 			pods_transient_clear( $key );
 		}
 
+	}
+
+	/**
+	 * Test if archive is set for post types that don't have archives.
+	 *
+	 * @return bool|mixed|null|void
+	 *
+	 * @since 1.1.0
+	 */
+	function archive_test() {
+
+		//try to get cached results of this method
+		$key = 'pods_pfat_archive_test';
+		$archive_test = pods_transient_get( $key );
+
+		if ( $archive_test === false || PODS_PFAT_DEV_MODE ) {
+			$front = $this->front_end( true );
+			$auto_pods = $front->auto_pods();
+			foreach ( $auto_pods as $pod ) {
+				if ( !$pod[ 'has_archive' ] && $pod[ 'archive' ] && $pod[ 'type' ] !== 'taxonomy' ) {
+					$archive_test[ $pod[ 'label' ] ] = 'fail';
+				}
+
+			}
+
+			pods_transient_set( $key, $archive_test );
+
+		}
+
+		return $archive_test;
+
+	}
+
+	/**
+	 * Throw admin warnings for post types that have archive templates set, but don't support archives
+	 *
+	 * @since 1.1.0
+	 */
+	function archive_warning() {
+
+		//create $page variable to check if we are on pods admin page
+		$page = pods_v( 'page','get', false, true );
+
+		//check if we are on Pods Admin page
+		if ( $page === 'pods' ) {
+			$archive_test = $this->archive_test();
+			if ( is_array( $archive_test ) ) {
+				foreach ( $archive_test as $label => $test ) {
+					if ( $test === 'fail' ) {
+						echo sprintf( '<div id="message" class="error"><p>%s</p></div>',
+							sprintf(
+								__( 'The Pods post type %1$s has an archive template set to be displayed by Pods Frontier Auto Template, but the Pod does not have an archive. You can enable post type archives in the "Advanced Options" tab.', 'pfat' ),
+								$label )
+						);
+					}
+
+				}
+
+			}
+
+		}
+
+	}
+
+	/**
+	 * Get titles of all Pods Templates
+	 *
+	 * @return array Array of template names
+	 *
+	 * @since 1.1.0
+	 */
+	function get_template_titles() {
+
+		$titles = array();
+
+		$templates = get_posts( array( 'post_type' => '_pods_template', 'order'=> 'ASC', 'orderby' => 'title'));
+		foreach ( $templates as $template ) {
+			$titles[ ] = $template->post_title;
+		}
+
+		return $titles;
 	}
 
 } // Pods_PFAT
@@ -328,7 +452,9 @@ function pfat_safe_activate() {
 	if ( defined( 'PODS_VERSION' ) ) {
 		if (version_compare( PODS_VERSION, '2.3.18' ) >= 0) {
 			$GLOBALS[ 'Pods_PFAT' ] = Pods_PFAT::init();
+
 		}
+
 	}
 }
 
@@ -349,13 +475,15 @@ function pfat_admin_notice_pods_not_active() {
 		global $pagenow;
 		if ( $pagenow == 'plugins.php' ) {
 			?>
-				<div class="updated">
-					<p><?php _e( 'You have activated Pods Frontier Auto Templates, but not the core Pods plugin.', 'pfat' ); ?></p>
+				<div class="error">
+					<p><?php _e( 'You have activated Pods Frontier Auto Template, but not the core Pods plugin.', 'pfat' ); ?></p>
 				</div>
 			<?php
 
 		} //endif on the right page
+
 	} //endif Pods is not active
+
 }
 
 /**
@@ -382,12 +510,15 @@ function pfat_admin_notice_pods_min_version_fail() {
 			//check if we are on Pods Admin page
 			if ( $page === 'pods' ) {
 				?>
-				<div class="updated">
-					<p><?php _e( 'Pods Frontier Auto Templates, requires Pods version '.$minimum_version.' or later. Current version of Pods is '.PODS_VERSION, 'pfat' ); ?></p>
+				<div class="error">
+					<p><?php _e( 'Pods Frontier Auto Template, requires Pods version '.$minimum_version.' or later. Current version of Pods is '.PODS_VERSION, 'pfat' ); ?></p>
 				</div>
 			<?php
 
 			} //endif on the right page
+
 		} //endif version compare
+
 	} //endif Pods is not active
+	
 }
