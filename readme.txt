@@ -4,7 +4,7 @@ Tags:  content types, custom fields, custom post types, custom taxonomies, pods,
 Donate link: http://podsfoundation.org/donate/
 Requires at least: 3.8
 Tested up to: 3.9.1
-Stable tag: 1.0.0
+Stable tag: 1.1.2
 License: GPL v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,3 +83,7 @@ First WPORG release.
 New options for where to place the template, as well as bug fixes and settings UI improvements.
 = 1.1.1 =
 Fixes for several issues and improves settings UI. For more information see: http://pods.io/?p=185097
+= 1.1.2 =
+Prevent admin nag about post types not having archive support for posts/pages/attachment
+Corrected name of admin tag.
+Added plugin icon to assets.

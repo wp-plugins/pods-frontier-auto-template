@@ -3,7 +3,7 @@
 Plugin Name: Pods Frontier Auto Template
 Plugin URI: http://pods.io/?p=182830
 Description: Automatic front-end output of Pods Templates.
-Version: 1.1.0
+Version: 1.1.2
 Author: Pods Framework Team
 Author URI: http://pods.io/
 Text Domain: pods-pfat
@@ -168,7 +168,7 @@ class Pods_PFAT {
 	 */
 	function tab( $tabs, $pod, $addtl_args ) {
 
-		$tabs[ 'pods-pfat' ] = __( 'Frontier Auto Display Options', 'pods-pfat' );
+		$tabs[ 'pods-pfat' ] = __( 'Frontier Auto Template Options', 'pods-pfat' );
 
 		return $tabs;
 
@@ -375,8 +375,9 @@ class Pods_PFAT {
 		if ( $archive_test === false || PODS_PFAT_DEV_MODE ) {
 			$front = $this->front_end( true );
 			$auto_pods = $front->auto_pods();
-			foreach ( $auto_pods as $pod ) {
-				if ( !$pod[ 'has_archive' ] && $pod[ 'archive' ] && $pod[ 'type' ] !== 'taxonomy' ) {
+
+			foreach ( $auto_pods as $name => $pod ) {
+				if ( ! $pod[ 'has_archive' ] && $pod[ 'archive' ] && $pod[ 'type' ] !== 'taxonomy' && ! in_array( $name, array( 'post', 'page', 'attachment' ) ) ) {
 					$archive_test[ $pod[ 'label' ] ] = 'fail';
 				}
 
