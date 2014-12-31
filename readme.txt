@@ -3,7 +3,7 @@ Contributors: shelob9, sc0ttkclark, pglewis, Desertsnowman
 Tags:  content types, custom fields, custom post types, custom taxonomies, pods, post types
 Donate link: http://podsfoundation.org/donate/
 Requires at least: 3.8
-Tested up to: 3.9.1
+Tested up to: 4.1
 Stable tag: 1.1.2
 License: GPL v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
