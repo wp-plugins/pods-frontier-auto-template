@@ -3,7 +3,7 @@
 Plugin Name: Pods Frontier Auto Template
 Plugin URI: http://pods.io/?p=182830
 Description: Automatic front-end output of Pods Templates.
-Version: 1.1.2
+Version: 1.2.0
 Author: Pods Framework Team
 Author URI: http://pods.io/
 Text Domain: pods-pfat
@@ -39,6 +39,14 @@ License: GPL v2 or later
 // don't call the file directly
 if ( !defined( 'ABSPATH' ) ) {
 	exit;
+}
+
+/**
+ * Don't load in Pods 2.5.5
+ */ 
+if ( version_compare( PODS_VERSION, '2.5.5', '>=' ) ) {
+	return;
+	
 }
 
 //add a dev mode for this
@@ -270,8 +278,8 @@ class Pods_PFAT {
 
 				}
 
-				$options[ 'pods-pfat' ][ 'pfat_archive' ][ 'data' ] = $this->get_template_titles();
-				$options[ 'pods-pfat' ][ 'pfat_single' ][ 'data' ] = $this->get_template_titles();
+				$options[ 'pods-pfat' ][ 'pfat_archive' ][ 'data' ] = array_combine( $this->get_template_titles(), $this->get_template_titles() );
+				$options[ 'pods-pfat' ][ 'pfat_single' ][ 'data' ] = array_combine( $this->get_template_titles(), $this->get_template_titles() );
 			}
 
 			//Add data to $pick for template location
@@ -521,5 +529,5 @@ function pfat_admin_notice_pods_min_version_fail() {
 		} //endif version compare
 
 	} //endif Pods is not active
-	
+
 }
