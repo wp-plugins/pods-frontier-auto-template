@@ -32,7 +32,7 @@ class Pods_PFAT_Frontend {
 			add_action( 'wp', array( $this, 'set_frontier_style_script' ) );
 		}
 
-		add_filter( 'the_content', array( $this, 'front' ) );
+		add_filter( 'the_content', array( $this, 'front' ), 10.5 );
 
 		if (  PFAT_USE_ON_EXCERPT  ) {
 			add_filter( 'the_excerpt', array ( $this, 'front' ) );

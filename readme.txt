@@ -4,7 +4,7 @@ Tags:  content types, custom fields, custom post types, custom taxonomies, pods,
 Donate link: http://podsfoundation.org/donate/
 Requires at least: 3.8
 Tested up to: 4.3
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPL v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
